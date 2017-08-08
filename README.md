@@ -1,25 +1,19 @@
 [Build Status / link to build job](#)
 
-# db_flagship
+# etspersist
 
-Erlang OTP19 Mysql Connection manager with a self managed pool
+Erlang OTP19 ETS Persistence module
 
 ## Overview
 
-This module allows to reuse connections to mysql using worker names.
+This module keeps the state of ETS tables and allows to manage data from it.
 
 Please see project definition [documentation][api-documentation]
 
 ## Ownership
 
-db_flagship is owned by the [elpaisa][email]. Feel free to [email me][email]."
+etspersist is owned by the [elpaisa][email]. Feel free to [email me][email]."
 
-## Dependencies
-
-This service depends on Mysql OTP
-
-
-## How to consume db_flagship
 
 ## How to contribute
 
@@ -34,12 +28,12 @@ Open github issues
 For running locally please use.
 
 ```sh
-git clone git@github.com:elpaisa/db_flagship.git.git
-cd db_flagship
+git clone git@github.com:elpaisa/etspersist.git.git
+cd etspersist
 make shell
 ```
 
-db_flagship requires configuration parameters. Copy the 
+etspersist requires configuration parameters. Copy the 
 `sys.config.tmpl` as `config/sys.config` and edit it accordingly:
 
 ```sh
@@ -50,7 +44,7 @@ vim sys.config
 ```erlang
 %%-*- mode: erlang -*-
 [
-  {db_flagship, [
+  {etspersist, [
     {connections, [
        {conn1, [
         {host, "localhost"},
@@ -67,7 +61,7 @@ vim sys.config
 ```
 
 Once you have filled out the above changes to the `sys.config`, you can start
-db_flagship:
+etspersist:
 
 ```sh
 make shell
@@ -115,7 +109,7 @@ make ct
 
 [design-doc]: #
 [email]: mailto:clientes@desarrollowebmedellin.com
-[api-documentation]: https://elpaisa.github.io/db_flagship/
+[api-documentation]: https://elpaisa.github.io/etspersist/
 [apidoc]: http://apidocjs.com
 
 <!--- vim: sw=4 et ts=4 -->
