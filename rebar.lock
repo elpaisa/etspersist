@@ -1,0 +1,32 @@
+{"1.1.0",
+[{<<"cf">>,{pkg,<<"cf">>,<<"0.2.2">>},3},
+ {<<"egeoip">>,
+  {git,"https://github.com/mochi/egeoip",
+       {ref,"4efda2c2b5b0084d3e77b8f0bbdec78514706b34"}},
+  1},
+ {<<"erlware_commons">>,{pkg,<<"erlware_commons">>,<<"1.0.0">>},2},
+ {<<"jsonx">>,
+  {git,"https://github.com/elpaisa/jsonx.git",
+       {ref,"629ad4b8511c1eef06c931b6b24302f8e45ff356"}},
+  1},
+ {<<"jsx">>,{pkg,<<"jsx">>,<<"2.8.2">>},0},
+ {<<"meck">>,
+  {git,"https://github.com/basho/meck.git",
+       {ref,"70d6a33ce7407029dc59e22a5b3c1c61c1348b23"}},
+  1},
+ {<<"qdate">>,
+  {git,"https://github.com/elpaisa/qdate",
+       {ref,"3e2688cbec2ea5815d2a31a6e1b1f6d955f4a4df"}},
+  1},
+ {<<"qdate_localtime">>,{pkg,<<"qdate_localtime">>,<<"1.1.0">>},2},
+ {<<"utils">>,
+  {git,"https://github.com/elpaisa/erlutils",
+       {ref,"c35f6ca31f4f30c931f3f100781cbbd2e346199c"}},
+  0}]}.
+[
+{pkg_hash,[
+ {<<"cf">>, <<"7F2913FFF90ABCABD0F489896CFEB0B0674F6C8DF6C10B17A83175448029896C">>},
+ {<<"erlware_commons">>, <<"087467DE5833C0BB5B3CCDD387F9E9C1FB816A75B7A709629BF24B5ED3246C51">>},
+ {<<"jsx">>, <<"7ACC7D785B5ABE8A6E9ADBDE926A24E481F29956DD8B4DF49E3E4E7BCC92A018">>},
+ {<<"qdate_localtime">>, <<"5F6C3ACF10ECC5A7E2EFA3DCD2C863102B962188DBD9E086EC01D29FE029DA29">>}]}
+].
