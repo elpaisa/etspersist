@@ -5,7 +5,8 @@
   {mod, { etspersist_app, []}},
   {applications,
    [kernel,
-    stdlib
+    stdlib,
+    utils
    ]},
   {env,[]},
   {modules, []},

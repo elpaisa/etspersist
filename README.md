@@ -45,13 +45,8 @@ vim sys.config
 %%-*- mode: erlang -*-
 [
   {etspersist, [
-    {connections, [
-       {conn1, [
-        {host, "localhost"},
-        {user, "root"},
-        {pass, "0000"}
-       ]}
-    ]}
+    {timeout_ms, 5},
+    {max_timeout_ms, 1000}
   {sasl, [
     {sasl_error_logger, false}
   ]}

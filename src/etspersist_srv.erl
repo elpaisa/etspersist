@@ -1,17 +1,16 @@
 %%%-------------------------------------------------------------------
-%%% @author johnleytondiaz
-%%% @copyright (C) 2017, <COMPANY>
+%%% @author John Diaz
+%%% @copyright (C) 2017, elpaisa
 %%% @doc
-%%%
+%%% Table manager module
+%%% Takes care of child starting when a new ETS table is created and
+%%% sets the heir of it to the newly started child
 %%% @end
 %%% Created : 08. Aug 2017 10:30 AM
 %%%-------------------------------------------------------------------
 -module(etspersist_srv).
--author("johnleytondiaz").
+-author("John Diaz").
 -behaviour(gen_server).
--author("johnleytondiaz").
-
--define(MAX_TIMEOUT, 1000).
 
 -ifdef(TEST).
 -compile([export_all]).
@@ -31,19 +30,19 @@ start_link() ->
 %% @private
 init(_Args) ->
   utils:inf("Initializing ETS Persistence Module for ~p", [?MODULE]),
-  observer:start(),
   {ok, #state{}}.
 
 handle_call({new_ets, ETS}, _, State) ->
-  start_child(ETS),
-  {reply, give_away(ETS, create_table(ETS)), State};
+  Pid = start_child(ETS),
+  R = give_away(ETS, create_table(ETS), Pid),
+  {reply, R, State};
 handle_call(_Request, _, State) ->
   {noreply, ok, State}.
 handle_cast(_, State) ->
   {noreply, State}.
 
-handle_info({'ETS-TRANSFER', Id, _, ETS}, State) ->
-  give_away(ETS, Id),
+handle_info({'ETS-TRANSFER', Table, _, ETS}, State) ->
+  give_away(ETS, Table, is_alive(ETS)),
   {noreply, State};
 handle_info(_Info, State) ->
   {noreply, State}.
@@ -60,42 +59,48 @@ terminate(_Crash, State) ->
 code_change(_OldVsn, State, _Extra) ->
   {ok, State}.
 
-give_away(ETS, TId) ->
-  give_away(ETS, TId, await(ETS)).
-
-give_away(_, _, timeout) ->
-  {error, timeout};
+give_away(ETS, Id, false) ->
+  give_away(ETS, Id, await(ETS));
 give_away(ETS, Id, Pid) when is_pid(Pid) ->
-  utils:inf("Reassign ETS ~p to ~p", [ETS, Pid]),
+  utils:debug("Reassign ETS ~p to ~p", [ETS, Pid]),
   ets:give_away(Id, Pid, ETS),
   {ok, Pid};
-give_away(_, _, Response) ->
-  utils:err("Unexpected response from handler ~p", [Response]).
+give_away(_, _, R) ->
+  utils:err("Unexpected response from handler ~p", [R]).
 
-await(ETS)->
-  await(ETS, 10).
-
-await(ETS, Timeout) ->
-  await(ETS, Timeout, utils:is_alive(ETS)).
-
-await(_, Timeout, false) when Timeout >= ?MAX_TIMEOUT ->
-  timeout;
-await(ETS, Timeout, false) ->
-  timer:sleep(Timeout),
-  await(ETS, Timeout + 10, utils:is_alive(ETS));
-await(_, _, Pid) ->
-  Pid.
-
-new_ets(ETS)->
+new_ets(ETS) ->
   gen_server:call(?MODULE, {new_ets, ETS}, infinity).
 
-
-create_table(ETS)->
-  Options = [set, named_table, public, compressed, {heir,self(),ETS}],
+create_table(ETS) ->
+  Options = [set, named_table, public, compressed, {heir, self(), ETS}],
   ets:new(ETS, Options).
 
-start_child(Name)->
-  Worker = {Name,{etspersist_container,start_link,[Name]},
-    permanent,2000,worker,[etspersist_container]},
+start_child(Name0) ->
+  Name = get_name(Name0),
+  Worker = {Name, {etspersist_container, start_link, [Name]},
+    permanent, 2000, worker, [etspersist_container]},
   {ok, Pid} = supervisor:start_child(etspersist_sup, Worker),
-  register(Name, Pid).
+  Pid.
+
+await(ETS) ->
+  Timeout = etspersist:get_env(timeout_ms, 5),
+  MaxTimeout = etspersist:get_env(max_timeout_ms, 1000),
+  await(ETS, Timeout, MaxTimeout).
+
+await(ETS, Timeout, MaxTimeout) ->
+  await(is_alive(ETS), ETS, Timeout, MaxTimeout).
+
+await(false, _, Timeout, MaxTimeout) when Timeout >= MaxTimeout ->
+  timeout;
+await(false, ETS, Timeout, MaxTimeout) ->
+  timer:sleep(Timeout),
+  await(is_alive(ETS), ETS, (Timeout + Timeout), MaxTimeout);
+await(Pid, _, _, _) ->
+  Pid.
+
+is_alive(ETS)->
+  utils:is_alive(get_name(ETS)).
+
+get_name(Name)->
+  Prefix = etspersist:get_env(proc_prefix, ?MODULE),
+  utils:atom_join([Prefix, Name], "_").

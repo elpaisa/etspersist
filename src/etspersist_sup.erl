@@ -1,6 +1,5 @@
 %%%-------------------------------------------------------------------
 %% @doc etspersist top level supervisor.
-%% @end
 %%%-------------------------------------------------------------------
 
 -module(etspersist_sup).
@@ -20,20 +19,20 @@
 %%====================================================================
 
 start_link() ->
-    supervisor:start_link({local, ?SERVER}, ?MODULE, []).
+  supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
 %%====================================================================
 %% Supervisor callbacks
 %%====================================================================
 
 %% Child :: {Id,StartFunc,Restart,Shutdown,Type,Modules}
-init(_Args) ->Server =
-    {etspersist_srv,
-        {etspersist_srv, start_link, []},
-        permanent, 5000, worker,
-        dynamic % XXX
-    },
-    {ok, { {one_for_all, 0, 1}, [Server]} }.
+init(_Args) -> Server =
+  {etspersist_srv,
+    {etspersist_srv, start_link, []},
+    permanent, 5000, worker,
+    dynamic % XXX
+  },
+  {ok, {{one_for_one, 3, 10}, [Server]}}.
 
 %%====================================================================
 %% Internal functions

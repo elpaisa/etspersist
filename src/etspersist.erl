@@ -1,34 +1,53 @@
 %%%-------------------------------------------------------------------
-%%% @author johnleytondiaz
-%%% @copyright (C) 2017, <COMPANY>
+%%% @author John Diaz
+%%% @copyright (C) 2017, elpaisa
 %%% @doc
-%%%
+%%% Module for ETS persistence
+%%% Handles ETS tables for most common operations, insert, get, update
+%%% whenever an operation is done for any table, this one can or not
+%%% exists, it will create it automatically using a gen_server, ETS
+%%% tables will be created independent of the caller process, if this
+%%% one dies, they will persist along with their data.
 %%% @end
 %%% Created : 08. Aug 2017 1:43 PM
 %%%-------------------------------------------------------------------
 -module(etspersist).
--author("johnleytondiaz").
+-author("John Diaz").
+
+-export([test/0]).
 
 %% API
 -export([new/1, get/2, get/3, take/2, take/3, insert/2, insert/3, update/3]).
+-export([get_env/1, get_env/2, set_env/2]).
 
+test() ->
+  new(ets_test1),
+  insert(ets_test1, {1, good}),
+  new(ets_test2),
+  gen_server:cast(ets_test1, crash),
+  timer:sleep(2000),
+  ets:info(ets_test1),
+  get(ets_test1, 1).
 
 -spec new(ETS :: atom()) -> tuple().
 %%
-%% @doc Creates an ets table by name
-%% @param ETS name of the table to create
+%% @equiv new(ETS, ets:info(ETS))
 %%
 new(ETS) ->
   new(ETS, ets:info(ETS)).
 
-new(ETS, undefined)->
+-spec new(ETS :: atom(), term()) -> tuple().
+%%
+%% @doc Creates an ets table by name
+%% @param ETS name of the table to create
+%% @param ETS info
+%%
+new(ETS, undefined) ->
   etspersist_srv:new_ets(ETS);
-  %%ets:new(ETS, [set, named_table, public, compressed]);
-new(_, Table)->
+new(_, Table) ->
   Table.
 
-
--spec get(ETS :: atom(), Key :: any()) ->  {ok, Table :: tuple(), any()}.
+-spec get(ETS :: atom(), Key :: any()) -> {ok, Table :: tuple(), any()}.
 %%
 %% @doc Gets an item from an ets
 %% @equiv get(Table, ETS, Key)
@@ -38,7 +57,7 @@ new(_, Table)->
 get(ETS, Key) ->
   get(new(ETS), ETS, Key).
 
--spec get(Table :: tuple(), ETS :: atom(), Key :: any()) ->  {ok, Table :: tuple(), any()}.
+-spec get(Table :: tuple(), ETS :: atom(), Key :: any()) -> {ok, Table :: tuple(), any()}.
 %%
 %% @doc Gets an item from an ets
 %% @param Table actual ETS table
@@ -49,7 +68,7 @@ get(Table, ETS, Key) ->
   Search = ets:lookup(ETS, Key),
   {ok, Table, Search}.
 
--spec take(ETS :: atom(), Key :: any()) ->  {ok, Table :: tuple(), any()}.
+-spec take(ETS :: atom(), Key :: any()) -> {ok, Table :: tuple(), any()}.
 %%
 %% @doc Takes an item from an ets, that means the key will be deleted as soon as it
 %% is retrieved
@@ -60,7 +79,7 @@ get(Table, ETS, Key) ->
 take(ETS, Key) ->
   take(new(ETS), ETS, Key).
 
--spec take(Table :: tuple(), ETS :: atom(), Key :: any()) ->  {ok, Table :: tuple(), any()}.
+-spec take(Table :: tuple(), ETS :: atom(), Key :: any()) -> {ok, Table :: tuple(), any()}.
 %%
 %% @doc Takes an item from an ets
 %% @param Table actual ETS table
@@ -72,7 +91,7 @@ take(Table, ETS, Key) ->
   {ok, Table, Take}.
 
 
--spec insert(ETS :: atom(), Key :: any()) ->  {ok, Table :: tuple(), any()}.
+-spec insert(ETS :: atom(), Key :: any()) -> {ok, Table :: tuple(), any()}.
 %%
 %% @doc Inserts an item into an ets
 %% @equiv insert(Table, ETS, Value)
@@ -80,7 +99,7 @@ take(Table, ETS, Key) ->
 insert(ETS, Value) ->
   insert(new(ETS), ETS, Value).
 
--spec insert(Table :: tuple(), ETS :: atom(), Key :: any()) ->  {ok, Table :: tuple(), any()}.
+-spec insert(Table :: tuple(), ETS :: atom(), Key :: any()) -> {ok, Table :: tuple(), any()}.
 %%
 %% @doc Inserts an item into an ets
 %% @param Table actual ETS table
@@ -91,7 +110,7 @@ insert(Table, ETS, Value) ->
   Insert = ets:insert(ETS, Value),
   {ok, Table, Insert}.
 
--spec update(ETS :: atom(), Position :: integer(), Value :: any()) ->  {ok, Table :: tuple(), any()}.
+-spec update(ETS :: atom(), Position :: integer(), Value :: any()) -> {ok, Table :: tuple(), any()}.
 %%
 %% @doc Updates an item in an ets
 %% @equiv update(Table, ETS, Position, Value)
@@ -100,7 +119,7 @@ update(ETS, Position, Value) ->
   update(new(ETS), ETS, Position, Value).
 
 -spec update(Table :: tuple(), ETS :: atom(), Position :: integer(), Value :: any()
-) ->  {ok, Table :: tuple(), any()}.
+) -> {ok, Table :: tuple(), any()}.
 %%
 %% @doc Updates an item in an ets by its position in the record
 %%
@@ -112,3 +131,26 @@ update(ETS, Position, Value) ->
 update(Table, ETS, Position, Value) ->
   Update = ets:update_element(ETS, Position, Value),
   {ok, Table, Update}.
+
+-spec get_env(atom()) -> term() | 'undefined'.
+%%
+%% @doc get an environment variable's value (or undefined if it doesn't exist)
+%%
+get_env(Key) ->
+  get_env(Key, 'undefined').
+
+
+-spec get_env(atom(), term()) -> term().
+%%
+%% @doc get an environment variable's value (or Default if it doesn't exist)
+%%
+get_env(Key, Default) ->
+  application:get_env(?MODULE, Key, Default).
+
+
+-spec set_env(atom(), any()) -> ok.
+%%
+%% @doc set the environment variable's value
+%%
+set_env(Key, Value) ->
+  application:set_env(?MODULE, Key, Value).

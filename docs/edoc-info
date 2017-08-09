@@ -1,0 +1,4 @@
+%% encoding: UTF-8
+{application,etspersist}.
+{modules,[etspersist,etspersist_app,etspersist_container,etspersist_srv,
+          etspersist_sup]}.
