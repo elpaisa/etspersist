@@ -17,7 +17,7 @@
 -export([test/0]).
 
 %% API
--export([new/1, get/2, get/3, take/2, take/3, insert/2, insert/3, update/3]).
+-export([new/1, get/2, get/3, take/2, take/3, insert/2, insert/3, update/3, call/2]).
 -export([get_env/1, get_env/2, set_env/2]).
 
 test() ->
@@ -27,7 +27,8 @@ test() ->
   gen_server:cast(ets_test1, crash),
   timer:sleep(2000),
   ets:info(ets_test1),
-  get(ets_test1, 1).
+  %%get(ets_test1, 1),
+  call(get, [ets_test1, 1]).
 
 -spec new(ETS :: atom()) -> tuple().
 %%
@@ -131,6 +132,31 @@ update(ETS, Position, Value) ->
 update(Table, ETS, Position, Value) ->
   Update = ets:update_element(ETS, Position, Value),
   {ok, Table, Update}.
+
+-spec call(F :: atom(), Params :: term()) -> list().
+%%
+%% @doc Execs a function against a table
+%%
+%% @param Function function to be exec
+%% @param Params list ETS and others
+%%
+call(insert, Params)->
+  response(apply(?MODULE, insert, Params));
+call(update, Params)->
+  response(apply(?MODULE, update, Params));
+call(take, Params)->
+  response(apply(?MODULE, take, Params));
+call(get, Params)->
+  response(apply(?MODULE, get, Params));
+call(F, _)->
+  utils:inf("Undefined function ~p", [F]),
+  [].
+
+response({ok, _Table, R})->
+  R;
+response(R)->
+  utils:err("Unhandled response ~p", [R]),
+  [].
 
 -spec get_env(atom()) -> term() | 'undefined'.
 %%
