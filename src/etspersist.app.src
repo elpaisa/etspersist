@@ -1,7 +1,10 @@
 {application, etspersist,
  [{description, "An OTP application"},
   {vsn, "0.1.0"},
-  {registered, []},
+  {registered, [
+    etspersist_srv,
+    etspersist_sup
+  ]},
   {mod, { etspersist_app, []}},
   {applications,
    [kernel,
