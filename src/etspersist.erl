@@ -17,7 +17,7 @@
 -export([test/0]).
 
 %% API
--export([new/1, get/2, get/3, take/2, take/3, insert/2, insert/3, update/3, call/2]).
+-export([new/1, get/2, get/3, take/2, take/3, insert/2, insert/3, update/3, delete/2, delete/3, call/2]).
 -export([get_env/1, get_env/2, set_env/2]).
 
 test() ->
@@ -132,6 +132,26 @@ update(ETS, Position, Value) ->
 update(Table, ETS, Position, Value) ->
   Update = ets:update_element(ETS, Position, Value),
   {ok, Table, Update}.
+
+-spec delete(ETS :: atom(), Key :: any()) -> {ok, Table :: tuple(), term()}.
+%%
+%% @doc Updates an item in an ets
+%% @equiv delete(Table, ETS, Key)
+%%
+delete(ETS, Key) ->
+  delete(new(ETS), ETS, Key).
+
+-spec delete(Table :: term(), ETS :: atom(), Key :: any()) -> {ok, Table :: tuple(), term()}.
+%%
+%% @doc Deletes an item from an ets by its key
+%%
+%% @param Table actual ETS table
+%% @param ETS name of the table to insert the record
+%% @param Key key of the record
+%%
+delete(Table, ETS, Key) ->
+  Delete = ets:delete(ETS, Key),
+  {ok, Table, Delete}.
 
 -spec call(F :: atom(), Params :: term()) -> list().
 %%
