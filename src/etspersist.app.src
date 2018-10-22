@@ -8,8 +8,7 @@
   {mod, { etspersist_app, []}},
   {applications,
    [kernel,
-    stdlib,
-    utils
+    stdlib
    ]},
   {env,[]},
   {modules, []},

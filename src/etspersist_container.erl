@@ -43,7 +43,7 @@ handle_cast(_, State) ->
   {noreply, State}.
 
 handle_info({'ETS-TRANSFER', Tab, _, TName}, _State) ->
-  utils:debug("Got ownership for: ~p.", [TName]),
+  error_logger:warning_msg("Got ownership for: ~p.", [TName]),
   {noreply, Tab};
 handle_info(_Info, State) ->
   {noreply, State}.

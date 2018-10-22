@@ -29,7 +29,7 @@ start_link() ->
 
 %% @private
 init(_Args) ->
-  utils:inf("Initializing ETS Persistence Module for ~p", [?MODULE]),
+  error_logger:info_msg("Initializing ETS Persistence Module for ~p", [?MODULE]),
   {ok, #state{}}.
 
 handle_call({new_ets, ETS}, _, State) ->
@@ -62,11 +62,11 @@ code_change(_OldVsn, State, _Extra) ->
 give_away(ETS, Id, false) ->
   give_away(ETS, Id, await(ETS));
 give_away(ETS, Id, Pid) when is_pid(Pid) ->
-  utils:debug("Reassign ETS ~p to ~p", [ETS, Pid]),
+  error_logger:warning_msg("Reassign ETS ~p to ~p", [ETS, Pid]),
   ets:give_away(Id, Pid, ETS),
   {ok, Pid};
 give_away(_, _, R) ->
-  utils:err("Unexpected response from handler ~p", [R]).
+  error_logger:error_msg("Unexpected response from handler ~p", [R]).
 
 new_ets(ETS) ->
   gen_server:call(?MODULE, {new_ets, ETS}, infinity).
@@ -99,8 +99,8 @@ await(Pid, _, _, _) ->
   Pid.
 
 is_alive(ETS)->
-  utils:is_alive(get_name(ETS)).
+  etspersist:is_alive(get_name(ETS)).
 
 get_name(Name)->
   Prefix = etspersist:get_env(proc_prefix, ?MODULE),
-  utils:atom_join([Prefix, Name], "_").
+  etspersist:atom_join([Prefix, Name], "_").

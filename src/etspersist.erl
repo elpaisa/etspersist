@@ -18,7 +18,7 @@
 
 %% API
 -export([new/1, get/2, get/3, take/2, take/3, insert/2, insert/3, update/3, delete/2, delete/3, call/2]).
--export([get_env/1, get_env/2, set_env/2]).
+-export([get_env/1, get_env/2, set_env/2, is_alive/1, atom_join/1]).
 
 test() ->
   new(ets_test1),
@@ -169,13 +169,13 @@ call(take, Params)->
 call(get, Params)->
   response(apply(?MODULE, get, Params));
 call(F, _)->
-  utils:inf("Undefined function ~p", [F]),
+  error_logger:info_msg("Undefined function ~p", [F]),
   [].
 
 response({ok, _Table, R})->
   R;
 response(R)->
-  utils:err("Unhandled response ~p", [R]),
+  error_logger:error_msg("Unhandled response ~p", [R]),
   [].
 
 -spec get_env(atom()) -> term() | 'undefined'.
@@ -200,3 +200,61 @@ get_env(Key, Default) ->
 %%
 set_env(Key, Value) ->
   application:set_env(?MODULE, Key, Value).
+
+
+-spec is_alive(Name :: atom()) -> pid() | false.
+%%
+%% @doc Seeks a Process by its name and gets its Pid, if not running returns false,
+%% otherwise returns its pid
+%%
+is_alive(Name) ->
+  is_alive(Name, whereis(Name)).
+
+is_alive(_, undefined) ->
+  false;
+is_alive(Name, Pid) ->
+  is_alive(Name, Pid, process_info(Pid)).
+
+is_alive(Name, Pid, undefined) ->
+  exit(Pid, normal),
+  unregister(Name),
+  false;
+is_alive(_, Pid, _) ->
+  Pid.
+
+
+-spec atom_join(List :: list()) -> atom().
+%%----------------------------------------------------------------------
+%% @doc Joins to atoms and returns the corresponding atom
+%%----------------------------------------------------------------------
+atom_join(List) ->
+  atom_join(List, "_").
+atom_join(List, Separator) when Separator =/= "_" ->
+  Lists = atoms_to_list(List),
+  string:join(Lists, Separator);
+atom_join(List, Separator) ->
+  Lists = atoms_to_list(List),
+  list_to_atom(string:join(Lists, Separator)).
+
+atoms_to_list(List) ->
+  lists:map(
+    fun(Atom) ->
+      need_list(Atom)
+    end, List).
+
+-spec need_list(Match :: any()) -> list().
+%%----------------------------------------------------------------------
+%% @doc converts anything to list
+%%----------------------------------------------------------------------
+need_list(Match) when is_list(Match) ->
+  Match;
+need_list(Match) when is_integer(Match) ->
+  integer_to_list(Match);
+need_list(Match) when is_atom(Match) ->
+  atom_to_list(Match);
+need_list(Match) when is_binary(Match) ->
+  binary_to_list(Match);
+need_list(Match) when is_float(Match) ->
+  float_to_list(Match);
+need_list(Match) when is_tuple(Match) ->
+  tuple_to_list(Match).
